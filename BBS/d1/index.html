@@ -5,23 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Day 1: Python Programming Foundations</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
         :root {
-            --emerald-dark: #022c22;
-            --emerald-mid: #047857;
-            --emerald-light: #10b981;
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --bg-gradient-start: #011812;
+            --bg-gradient-end: #03402e;
+            --glass-bg: rgba(20, 20, 20, 0.4);
+            --glass-border: rgba(16, 185, 129, 0.2);
+            --emerald-accent: #10b981;
+            --emerald-glow: rgba(16, 185, 129, 0.5);
             --text-main: #f8fafc;
-            --text-accent: #6ee7b7;
+            --text-muted: #cbd5e1;
         }
 
         body {
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--emerald-dark) 0%, #064e3b 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             color: var(--text-main);
             height: 100vh;
             display: flex;
@@ -30,511 +31,394 @@
             overflow: hidden;
         }
 
-        /* Glassmorphism Container */
-        #presentation-container {
-            width: 85vw;
-            height: 80vh;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
+        /* Ambient Background Glow */
+        .ambient-light {
+            position: absolute;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(0,0,0,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
         }
 
-        #slide-content {
+        /* Main Presentation Container */
+        #deck-container {
+            width: 90vw;
+            max-width: 1400px;
+            height: 85vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Progress Bar */
+        #progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--emerald-accent);
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--emerald-glow);
+        }
+
+        /* Slide Content Area */
+        #slide-viewport {
             flex-grow: 1;
+            padding: 60px 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            animation: fadeIn 0.4s ease-in-out;
+            position: relative;
         }
 
+        .slide-content {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            position: absolute;
+            top: 60px;
+            bottom: 60px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            visibility: hidden;
+        }
+
+        .slide-content.active {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        /* Typography */
         h1 {
-            font-size: 3.5rem;
+            font-size: 4.5rem;
             font-weight: 800;
-            margin-bottom: 20px;
-            background: linear-gradient(to right, #fff, var(--text-accent));
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #fff 0%, var(--emerald-accent) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.1;
         }
 
         h2 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 600;
-            color: var(--text-accent);
+            color: var(--emerald-accent);
             margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        p, li {
+            font-size: 1.6rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-bottom: 20px;
         }
 
         ul {
-            font-size: 1.5rem;
-            line-height: 2;
-            margin-left: 20px;
+            margin-left: 30px;
+            padding-left: 10px;
         }
 
-        p {
-            font-size: 1.5rem;
-            line-height: 1.6;
+        li {
+            margin-bottom: 16px;
         }
 
         .highlight {
-            color: var(--emerald-light);
+            color: #fff;
             font-weight: 600;
+            border-bottom: 2px solid var(--emerald-accent);
+            padding-bottom: 2px;
         }
 
-        /* Code Blocks */
-        pre {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass-border);
+        /* Mac-Style Code Terminal */
+        .code-window {
+            background: #0f172a;
             border-radius: 12px;
-            padding: 20px;
-            font-family: 'Fira Code', monospace;
-            font-size: 1.2rem;
-            overflow-x: auto;
-            color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        .code-comment { color: #94a3b8; font-style: italic; }
-        .code-keyword { color: #c084fc; }
-        .code-string { color: #6ee7b7; }
-        .code-func { color: #60a5fa; }
+        .code-header {
+            background: #1e293b;
+            padding: 12px 20px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
 
-        /* Navigation Controls */
-        #controls {
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #eab308; }
+        .dot.green { background: #22c55e; }
+
+        pre {
+            margin: 0;
+            padding: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .token-comment { color: #64748b; font-style: italic; }
+        .token-keyword { color: #c678dd; }
+        .token-string { color: #10b981; }
+        .token-function { color: #61afef; }
+        .token-number { color: #d19a66; }
+
+        /* Navigation Footer */
+        #nav-footer {
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px;
-            padding-top: 20px;
             border-top: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2);
         }
 
         .nav-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--glass-border);
-            color: white;
-            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid var(--emerald-accent);
+            color: var(--emerald-accent);
+            padding: 12px 28px;
             font-size: 1.2rem;
+            font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             font-family: 'Inter', sans-serif;
-            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .nav-btn:hover:not(:disabled) {
-            background: var(--emerald-light);
-            border-color: var(--emerald-light);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+            background: var(--emerald-accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--emerald-glow);
         }
 
         .nav-btn:disabled {
-            opacity: 0.3;
+            border-color: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.2);
             cursor: not-allowed;
         }
 
-        #progress {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-accent);
+        #slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--text-muted);
             letter-spacing: 2px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <div id="presentation-container">
-        <div id="slide-content">
+    <div class="ambient-light"></div>
+
+    <div id="deck-container">
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <div id="slide-viewport">
             </div>
         
-        <div id="controls">
-            <button id="prev-btn" class="nav-btn" onclick="prevSlide()">&#8592; Previous</button>
-            <div id="progress">1 / 30</div>
-            <button id="next-btn" class="nav-btn" onclick="nextSlide()">Next &#8594;</button>
+        <div id="nav-footer">
+            <button id="btn-prev" class="nav-btn" onclick="navigate(-1)">&#8592; Prev</button>
+            <div id="slide-counter">01 / 30</div>
+            <button id="btn-next" class="nav-btn" onclick="navigate(1)">Next &#8594;</button>
         </div>
     </div>
 
     <script>
-        const slides = [
+        // Array of 30 exact HTML strings to prevent template literal execution errors
+        const slideData = [
             // Slide 1
-            {
-                content: `
-                    <h1>Python & Machine Learning</h1>
-                    <h2>Day 1: Programming Foundations & Architecture</h2>
-                    <p>Understanding the language ecosystem and memory management principles.</p>
-                `
-            },
+            "<h1>Python & Machine Learning</h1><h2>Day 1: Programming Foundations & Architecture</h2><p>Understanding the language ecosystem, environment isolation, and dynamic memory management principles.</p>",
+            
             // Slide 2
-            {
-                content: `
-                    <h2>Day 1 Objectives</h2>
-                    <ul>
-                        <li>Understand Python's interpreted architecture.</li>
-                        <li>Master isolated virtual environments.</li>
-                        <li>Deconstruct variables and heap memory allocation.</li>
-                        <li>Analyze primitive data types and their hardware limitations.</li>
-                    </ul>
-                `
-            },
+            "<h2>Day 1 Objectives</h2><ul><li>Deconstruct Python's interpreted architecture.</li><li>Master the deployment of isolated virtual environments.</li><li>Understand variable memory referencing and the heap.</li><li>Analyze primitive data types and hardware limitations.</li></ul>",
+            
             // Slide 3
-            {
-                content: `
-                    <h2>What is Python?</h2>
-                    <p>Python is a <span class="highlight">high-level, interpreted, and dynamically typed</span> programming language[cite: 21].</p>
-                    <ul>
-                        <li>The de facto standard for Data Science and Machine Learning[cite: 21].</li>
-                        <li>Strict emphasis on code readability and minimalist syntax[cite: 22].</li>
-                    </ul>
-                `
-            },
+            "<h2>What is Python?</h2><p>Python is a <span class='highlight'>high-level, interpreted, and dynamically typed</span> programming language.</p><ul><li>It is the de facto standard for Data Science and Machine Learning.</li><li>Designed with a strict emphasis on code readability and minimalist syntax.</li></ul>",
+            
             // Slide 4
-            {
-                content: `
-                    <h2>Interpreted vs. Compiled</h2>
-                    <p>Because Python is an interpreted language, the runtime engine reads and executes the code line-by-line[cite: 23].</p>
-                    <ul>
-                        <li>It does not compile down to machine code all at once[cite: 23].</li>
-                        <li>This significantly accelerates debugging and iterative development cycles[cite: 24].</li>
-                    </ul>
-                `
-            },
+            "<h2>Interpreted vs. Compiled</h2><p>Because Python is an interpreted language, the runtime engine reads and executes the code line-by-line.</p><ul><li>It does not compile down to machine code all at once.</li><li>This significantly accelerates the debugging process and iterative development cycles.</li></ul>",
+            
             // Slide 5
-            {
-                content: `
-                    <h2>Professional Environment Architecture</h2>
-                    <p>Writing code is only one piece of the puzzle[cite: 25].</p>
-                    <p>An environment is the specific combination of:</p>
-                    <ul>
-                        <li>The Python Interpreter.</li>
-                        <li>Standard standard libraries.</li>
-                        <li>Third-party packages.</li>
-                        <li>The Integrated Development Environment (IDE)[cite: 26].</li>
-                    </ul>
-                `
-            },
+            "<h2>The Interpreter Process</h2><p>When you run a Python script, an invisible pipeline activates:</p><ul><li><strong>Source Code:</strong> Written by the developer (.py file).</li><li><strong>Bytecode Compilation:</strong> Python converts source to intermediate bytecode (.pyc).</li><li><strong>Virtual Machine (PVM):</strong> The PVM executes the bytecode on the host machine.</li></ul>",
+            
             // Slide 6
-            {
-                content: `
-                    <h2>Package Managers</h2>
-                    <p>Standard environments rely on package managers like <span class="highlight">pip</span> or <span class="highlight">conda</span>[cite: 27].</p>
-                    <ul>
-                        <li>Used to download and manage external libraries[cite: 27].</li>
-                        <li>Essential for tools like NumPy or Scikit-Learn that are not bundled with core Python[cite: 27].</li>
-                    </ul>
-                `
-            },
+            "<h2>Professional Environment Architecture</h2><p>Writing code is only one piece of the puzzle.</p><p>An environment is the specific combination of:</p><ul><li>The Python Interpreter core.</li><li>Standard libraries.</li><li>Third-party packages.</li><li>The IDE used to write the code.</li></ul>",
+            
             // Slide 7
-            {
-                content: `
-                    <h2>The Problem: Dependency Conflicts</h2>
-                    <p>If you install all packages globally on your machine, projects will collide.</p>
-                    <p>A predictive modeling project requiring an older library version can conflict with a newer security project on the same machine[cite: 31].</p>
-                `
-            },
+            "<h2>Package Managers</h2><p>Standard environments rely on package managers like <span class='highlight'>pip</span> or <span class='highlight'>conda</span>.</p><p>These tools download and manage external libraries—such as NumPy or Scikit-Learn—that do not come bundled with the core Python installation.</p>",
+            
             // Slide 8
-            {
-                content: `
-                    <h2>The Solution: Virtual Environments</h2>
-                    <p>A cornerstone of professional architecture is <span class="highlight">isolated execution</span>[cite: 28].</p>
-                    <ul>
-                        <li>Developers rely heavily on <code>venv</code> or <code>conda env</code>[cite: 29].</li>
-                        <li>A virtual environment is a self-contained directory housing a specific interpreter and a unique set of libraries[cite: 30].</li>
-                        <li>Maintains absolute dependency integrity[cite: 31].</li>
-                    </ul>
-                `
-            },
+            "<h2>The Problem: Dependency Conflicts</h2><p>If you install all packages globally on your machine, your projects will eventually collide.</p><p>A predictive modeling project requiring an older version of a library will conflict with a newer security project on the same machine.</p>",
+            
             // Slide 9
-            {
-                content: `
-                    <h2>Establishing an Environment</h2>
-                    <p>Creating and isolating a project in your terminal[cite: 54]:</p>
-<pre><code><span class="code-comment"># Create the isolated environment</span>
-python -m venv my_ml_env
-
-<span class="code-comment"># Activate it (Windows)</span>
-my_ml_env\\Scripts\\activate
-
-<span class="code-comment"># Activate it (Mac/Linux)</span>
-source my_ml_env/bin/activate</code></pre>
-                `
-            },
+            "<h2>The Solution: Virtual Environments</h2><p>A cornerstone of professional architecture is <span class='highlight'>isolated execution</span>.</p><ul><li>A virtual environment (venv or conda env) acts as a self-contained directory.</li><li>It houses a specific Python interpreter and a unique set of installed libraries.</li><li>Ensures absolute dependency integrity.</li></ul>",
+            
             // Slide 10
-            {
-                content: `
-                    <h2>Development Interfaces (IDEs)</h2>
-                    <p>Developers interface with this architecture through IDEs[cite: 32].</p>
-                    <ul>
-                        <li><strong>VS Code:</strong> Comprehensive facilities, syntax highlighting, and visual debugging[cite: 32].</li>
-                        <li><strong>Jupyter Notebooks:</strong> Interactive, cell-based execution[cite: 32].</li>
-                    </ul>
-                `
-            },
+            "<h2>Establishing an Environment</h2><p>Creating and isolating a project in your terminal:</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre><span class='token-comment'># Create the isolated environment</span>\npython -m venv my_ml_env\n\n<span class='token-comment'># Activate it (Windows)</span>\nmy_ml_env\\Scripts\\activate\n\n<span class='token-comment'># Activate it (Mac/Linux)</span>\nsource my_ml_env/bin/activate</pre></div>",
+            
             // Slide 11
-            {
-                content: `
-                    <h2>Jupyter Notebooks in Industry</h2>
-                    <p>Jupyter's cell-based execution format has become the industry standard for:</p>
-                    <ul>
-                        <li>Exploratory data analysis[cite: 32].</li>
-                        <li>Model training and iterative testing[cite: 32].</li>
-                        <li>Data visualization.</li>
-                    </ul>
-                `
-            },
+            "<h2>Development Interfaces (IDEs)</h2><p>Developers interface with this architecture through IDEs.</p><ul><li><strong>VS Code:</strong> Offers comprehensive facilities including syntax highlighting and visual debugging.</li><li><strong>Jupyter Notebooks:</strong> Provide an interactive, cell-based execution format.</li></ul>",
+            
             // Slide 12
-            {
-                content: `
-                    <h2>First Execution: Standard Output</h2>
-<pre><code><span class="code-comment"># Outputting environment status to the console [cite: 41, 42]</span>
-<span class="code-func">print</span>(<span class="code-string">"Initializing Python Execution Environment..."</span>)
-
-course_title = <span class="code-string">"Machine Learning Foundations"</span>
-total_modules = <span class="code-keyword">30</span>
-
-<span class="code-func">print</span>(<span class="code-string">"Course:"</span>, course_title) <span class="code-comment">[cite: 43]</span>
-<span class="code-func">print</span>(<span class="code-string">"Modules Loaded:"</span>, total_modules) <span class="code-comment">[cite: 44]</span></code></pre>
-                `
-            },
+            "<h2>Jupyter Notebooks in Industry</h2><p>Jupyter's format has become the industry standard for:</p><ul><li>Exploratory data analysis (EDA).</li><li>Iterative model training.</li><li>Inline data visualization and presentation.</li></ul>",
+            
             // Slide 13
-            {
-                content: `
-                    <h2>Foundations of Data: Variables</h2>
-                    <p>At the foundation of any application lies the need to store and manipulate data[cite: 59].</p>
-                    <p>In Python, this process begins with <span class="highlight">variables</span> and <span class="highlight">primitive data types</span>[cite: 60].</p>
-                `
-            },
+            "<h2>First Execution: Standard Output</h2><p>The print function outputs data to the console.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre><span class='token-function'>print</span>(<span class='token-string'>\"Initializing Python Execution Environment...\"</span>)\n\ncourse = <span class='token-string'>\"Machine Learning Foundations\"</span>\nmodules = <span class='token-number'>30</span>\n\n<span class='token-function'>print</span>(<span class='token-string'>\"Course:\"</span>, course)\n<span class='token-function'>print</span>(<span class='token-string'>\"Modules Loaded:\"</span>, modules)</pre></div>",
+            
             // Slide 14
-            {
-                content: `
-                    <h2>Variables are Not Containers</h2>
-                    <p>Unlike statically typed languages where a variable is a dedicated memory container[cite: 61]:</p>
-                    <ul>
-                        <li>Python variables act as <span class="highlight">dynamic labels or references</span>[cite: 62].</li>
-                        <li>They point to objects stored in the computer's memory[cite: 62].</li>
-                    </ul>
-                `
-            },
+            "<h2>Foundations of Data: Variables</h2><p>At the foundation of any application lies the need to store, retrieve, and manipulate data.</p><p>In Python, this process begins with <span class='highlight'>variables</span> and <span class='highlight'>primitive data types</span>.</p>",
+            
             // Slide 15
-            {
-                content: `
-                    <h2>Dynamic Typing Architecture</h2>
-                    <p>This design choice is what makes Python a dynamically typed language[cite: 63].</p>
-                    <p>Allows developers to write flexible code without the overhead of declaring variable types upfront[cite: 63].</p>
-                `
-            },
+            "<h2>Variables are Not Containers</h2><p>Unlike statically typed languages (like C++ or Java) where a variable is a dedicated container in memory allocated for a specific type:</p><p>Python variables act as <span class='highlight'>dynamic labels or references</span> pointing to objects stored elsewhere.</p>",
+            
             // Slide 16
-            {
-                content: `
-                    <h2>Memory Allocation: The Heap</h2>
-                    <p>When a value is assigned to a variable, Python's memory manager creates an object in the <span class="highlight">heap memory</span>[cite: 64].</p>
-                    <p>The variable name itself is simply bound to that object's memory address[cite: 65].</p>
-                `
-            },
+            "<h2>Dynamic Typing Architecture</h2><p>This design choice is what makes Python a dynamically typed language.</p><p>It allows developers to write flexible and highly readable code without the overhead of declaring variable types upfront.</p>",
+            
             // Slide 17
-            {
-                content: `
-                    <h2>Variable Reassignment</h2>
-                    <p>If a variable is reassigned to a new value of a completely different type:</p>
-                    <ul>
-                        <li>Python does <span class="highlight">not</span> overwrite the old data[cite: 66].</li>
-                        <li>Instead, it creates a new object and updates the reference to point to the new location[cite: 67].</li>
-                    </ul>
-                `
-            },
+            "<h2>Memory Allocation: The Heap</h2><p>When a value is assigned to a variable, Python's memory manager creates an object in the <span class='highlight'>heap memory</span>.</p><p>The variable name itself is simply bound to that object's specific memory address.</p>",
+            
             // Slide 18
-            {
-                content: `
-                    <h2>Garbage Collection</h2>
-                    <p>When an object in memory no longer has any variables pointing to it[cite: 68]:</p>
-                    <ul>
-                        <li>Python's built-in garbage collector automatically reclaims that memory space[cite: 68].</li>
-                        <li>Keeps the environment efficient and stable[cite: 68].</li>
-                    </ul>
-                `
-            },
+            "<h2>Variable Reassignment</h2><p>If a variable is reassigned to a new value of a completely different type:</p><ul><li>Python does <span class='highlight'>not</span> overwrite the old data.</li><li>It creates a new object and updates the reference to point to the new location.</li></ul>",
+            
             // Slide 19
-            {
-                content: `
-                    <h2>Inspecting Memory Architecture</h2>
-                    <p>We can observe this directly using built-in functionality[cite: 69]:</p>
-<pre><code>user_age = <span class="code-keyword">25</span>
-<span class="code-func">print</span>(<span class="code-func">type</span>(user_age), <span class="code-func">id</span>(user_age)) <span class="code-comment">[cite: 71]</span>
-
-<span class="code-comment"># Reassigning to a string object [cite: 72]</span>
-user_age = <span class="code-string">"Twenty-Five"</span>
-<span class="code-func">print</span>(<span class="code-func">type</span>(user_age), <span class="code-func">id</span>(user_age)) <span class="code-comment">[cite: 73]</span></code></pre>
-                `
-            },
+            "<h2>Garbage Collection</h2><p>When an object in memory no longer has any variables pointing to it, it becomes orphaned.</p><p>Python's built-in <span class='highlight'>garbage collector</span> automatically reclaims that memory space, keeping the environment stable.</p>",
+            
             // Slide 20
-            {
-                content: `
-                    <h2>Primitive Data Types</h2>
-                    <p>Python relies on four core primitive types[cite: 74, 75]:</p>
-                    <ul>
-                        <li><strong>int:</strong> Integers</li>
-                        <li><strong>float:</strong> Floating-point decimals</li>
-                        <li><strong>str:</strong> Strings</li>
-                        <li><strong>bool:</strong> Booleans</li>
-                    </ul>
-                `
-            },
+            "<h2>Inspecting Memory Architecture</h2><p>We can observe this behavior directly using built-in functionality:</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre>user_age = <span class='token-number'>25</span>\n<span class='token-function'>print</span>(<span class='token-function'>type</span>(user_age), <span class='token-function'>id</span>(user_age))\n\n<span class='token-comment'># The variable now points to a string object</span>\nuser_age = <span class='token-string'>\"Twenty-Five\"</span>\n<span class='token-function'>print</span>(<span class='token-function'>type</span>(user_age), <span class='token-function'>id</span>(user_age))</pre></div>",
+            
             // Slide 21
-            {
-                content: `
-                    <h2>The Integer Type (int)</h2>
-                    <p>Represents whole numbers of unlimited precision[cite: 74].</p>
-<pre><code><span class="code-comment"># Instantiating primitive data types [cite: 76]</span>
-student_count = <span class="code-keyword">150</span>   <span class="code-comment"># Integer [cite: 77, 78]</span></code></pre>
-                `
-            },
+            "<h2>Primitive Data Types Overview</h2><p>Python relies on four core primitive structures:</p><ul><li><strong>int:</strong> Integers (whole numbers).</li><li><strong>float:</strong> Floating-point numbers (decimals).</li><li><strong>str:</strong> Strings (textual data).</li><li><strong>bool:</strong> Booleans (truth values).</li></ul>",
+            
             // Slide 22
-            {
-                content: `
-                    <h2>The Float Type (float)</h2>
-                    <p>Decimal numbers utilizing double-precision 64-bit architecture[cite: 74].</p>
-<pre><code>course_rating = <span class="code-keyword">4.8</span>   <span class="code-comment"># Float [cite: 79, 80]</span></code></pre>
-                `
-            },
+            "<h2>The Integer Type (int)</h2><p>Represents whole numbers of unlimited precision.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre><span class='token-comment'># Instantiating integer data</span>\nstudent_count = <span class='token-number'>150</span>\nepoch_limit = <span class='token-number'>10000</span></pre></div>",
+            
             // Slide 23
-            {
-                content: `
-                    <h2>The String Type (str)</h2>
-                    <p>Textual data managed as an <span class="highlight">immutable sequence</span> of Unicode characters[cite: 75].</p>
-<pre><code>course_title = <span class="code-string">"Data Science"</span>  <span class="code-comment"># String [cite: 81, 82]</span></code></pre>
-                `
-            },
+            "<h2>The Float Type (float)</h2><p>Decimal numbers utilizing double-precision 64-bit architecture.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre><span class='token-comment'># Instantiating floating-point data</span>\ncourse_rating = <span class='token-number'>4.8</span>\nlearning_rate = <span class='token-number'>0.001</span></pre></div>",
+            
             // Slide 24
-            {
-                content: `
-                    <h2>The Boolean Type (bool)</h2>
-                    <p>Truth values: strictly <span class="highlight">True</span> or <span class="highlight">False</span>[cite: 75].</p>
-                    <p>The foundation of logical control flow.</p>
-<pre><code>is_published = <span class="code-keyword">True</span>  <span class="code-comment"># Boolean [cite: 83, 84]</span></code></pre>
-                `
-            },
+            "<h2>The String Type (str)</h2><p>Textual data managed as an <span class='highlight'>immutable sequence</span> of Unicode characters.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre><span class='token-comment'># Instantiating string data</span>\ncourse_title = <span class='token-string'>\"Data Science\"</span>\nalgorithm = <span class='token-string'>'Random Forest'</span></pre></div>",
+            
             // Slide 25
-            {
-                content: `
-                    <h2>Type Conversion (Casting)</h2>
-                    <p>Transforming data from one primitive type to another[cite: 85].</p>
-<pre><code>course_rating = <span class="code-keyword">4.8</span>
-
-<span class="code-comment"># Casting float to string</span>
-string_rating = <span class="code-func">str</span>(course_rating) <span class="code-comment">[cite: 86]</span>
-
-<span class="code-comment"># Casting float to integer (truncates decimal)</span>
-rounded_rating = <span class="code-func">int</span>(course_rating) <span class="code-comment">[cite: 86]</span></code></pre>
-                `
-            },
+            "<h2>The Boolean Type (bool)</h2><p>Truth values strictly evaluated as <span class='highlight'>True</span> or <span class='highlight'>False</span>. The foundation of automated decision making.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre><span class='token-comment'># Instantiating boolean data</span>\nis_published = <span class='token-keyword'>True</span>\nmodel_converged = <span class='token-keyword'>False</span></pre></div>",
+            
             // Slide 26
-            {
-                content: `
-                    <h2>The Importance of Primitives in ML</h2>
-                    <p>A deep mastery of memory and primitive types is critical in Data Engineering[cite: 87].</p>
-                    <p>Processing millions of rows using standard 64-bit Python floats can quickly exhaust a system's RAM[cite: 88].</p>
-                `
-            },
+            "<h2>Type Conversion (Casting)</h2><p>Transforming data from one primitive type to another is essential for data cleaning.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre>course_rating = <span class='token-number'>4.8</span>\n\n<span class='token-comment'># Casting float to string</span>\nstring_rating = <span class='token-function'>str</span>(course_rating)\n\n<span class='token-comment'># Casting float to integer (truncates decimal)</span>\nrounded_rating = <span class='token-function'>int</span>(course_rating)</pre></div>",
+            
             // Slide 27
-            {
-                content: `
-                    <h2>Hardware Limitations</h2>
-                    <p>Professionals must optimize data pipelines to ensure models can train efficiently without crashing[cite: 89].</p>
-                    <p>This involves transitioning standard Python primitives into memory-efficient structures (like NumPy's <code>float32</code> or <code>int8</code>)[cite: 89].</p>
-                `
-            },
+            "<h2>Hardware Limitations in ML</h2><p>Processing datasets containing millions of rows using standard 64-bit Python floats can quickly exhaust a system's RAM.</p><p>Professionals transition these primitives into highly optimized, memory-efficient arrays (like NumPy's float32).</p>",
+            
             // Slide 28
-            {
-                content: `
-                    <h2>F-Strings: Dynamic Output</h2>
-                    <p>Modern formatting allows evaluating variables directly inside curly braces[cite: 121, 122].</p>
-<pre><code>environment_isolated = <span class="code-keyword">True</span> <span class="code-comment">[cite: 39]</span>
-
-<span class="code-comment"># Utilizing an f-string for dynamic formatting [cite: 46]</span>
-status = <span class="code-string">f"System Isolation Active: {environment_isolated}."</span> <span class="code-comment">[cite: 46, 47]</span>
-
-<span class="code-func">print</span>(status)</code></pre>
-                `
-            },
+            "<h2>F-Strings: Dynamic Output</h2><p>Introduced in Python 3.6, the f-string is the modern industry standard for text formatting.</p><div class='code-window'><div class='code-header'><div class='dot red'></div><div class='dot yellow'></div><div class='dot green'></div></div><pre>environment_isolated = <span class='token-keyword'>True</span>\n\n<span class='token-comment'># Evaluates expressions dynamically at runtime</span>\nstatus = <span class='token-string'>f\"System Isolation Active: {environment_isolated}\"</span>\n\n<span class='token-function'>print</span>(status)</pre></div>",
+            
             // Slide 29
-            {
-                content: `
-                    <h2>Day 1 Summary</h2>
-                    <ul>
-                        <li>Python acts as an interpreted, highly-readable engine for Data Science.</li>
-                        <li>Virtual Environments protect dependency architecture.</li>
-                        <li>Variables dynamically reference memory addresses in the heap.</li>
-                        <li>Primitives (int, float, str, bool) must be explicitly managed to prevent memory exhaustion in ML tasks.</li>
-                    </ul>
-                `
-            },
+            "<h2>Day 1 Summary</h2><ul><li>Python relies on interpreted execution and virtual environments.</li><li>Variables are dynamic memory references, not static containers.</li><li>Garbage collection autonomously frees unreferenced memory.</li><li>Mastering primitives is the first step in optimizing data pipelines.</li></ul>",
+            
             // Slide 30
-            {
-                content: `
-                    <h2>Next Steps & Lab Setup</h2>
-                    <p><strong>Practical Task:</strong></p>
-                    <ol>
-                        <li>Establish a new Python project on your local machine[cite: 54].</li>
-                        <li>Create and activate an isolated virtual environment[cite: 54, 55].</li>
-                        <li>Write and execute a script demonstrating variable reassignment and type inspection.</li>
-                    </ol>
-                    <p><em>Prepare for Day 2: Control Flow & Conditional Logic.</em></p>
-                `
-            }
+            "<h2>Next Steps & Lab Setup</h2><p><span class='highlight'>Practical Task:</span></p><ol><li>Establish a new Python project on your local machine.</li><li>Create and activate an isolated virtual environment.</li><li>Write a script utilizing all four primitives and an f-string output.</li></ol><p><em>Prepare for Day 2: Input/Output and Conditional Logic.</em></p>"
         ];
 
-        let currentSlide = 0;
-        const contentDiv = document.getElementById('slide-content');
-        const progressDiv = document.getElementById('progress');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
+        let currentIndex = 0;
+        const viewport = document.getElementById('slide-viewport');
+        const progressBar = document.getElementById('progress-bar');
+        const slideCounter = document.getElementById('slide-counter');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
 
-        function renderSlide() {
-            // Update content with animation reset
-            contentDiv.style.animation = 'none';
-            contentDiv.offsetHeight; /* trigger reflow */
-            contentDiv.style.animation = 'fadeIn 0.4s ease-in-out';
-            contentDiv.innerHTML = slides[currentSlide].content;
-            
-            // Update progress
-            progressDiv.innerText = \`\${currentSlide + 1} / \${slides.length}\`;
-            
-            // Update buttons
-            prevBtn.disabled = currentSlide === 0;
-            nextBtn.disabled = currentSlide === slides.length - 1;
+        // Initialize presentation
+        function initDeck() {
+            // Create DOM elements for all slides
+            slideData.forEach((content, index) => {
+                const div = document.createElement('div');
+                div.className = 'slide-content';
+                div.id = 'slide-' + index;
+                div.innerHTML = content;
+                viewport.appendChild(div);
+            });
+            updateUI();
         }
 
-        function nextSlide() {
-            if (currentSlide < slides.length - 1) {
-                currentSlide++;
-                renderSlide();
+        // Handle navigation
+        function navigate(direction) {
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < slideData.length) {
+                currentIndex = newIndex;
+                updateUI();
             }
         }
 
-        function prevSlide() {
-            if (currentSlide > 0) {
-                currentSlide--;
-                renderSlide();
-            }
+        // Update visual state
+        function updateUI() {
+            // Update slides visibility
+            const allSlides = document.querySelectorAll('.slide-content');
+            allSlides.forEach((slide, index) => {
+                if (index === currentIndex) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Update Progress Bar
+            const progressPercentage = ((currentIndex + 1) / slideData.length) * 100;
+            progressBar.style.width = progressPercentage + '%';
+
+            // Update Counter
+            slideCounter.innerText = (currentIndex + 1 < 10 ? '0' : '') + (currentIndex + 1) + ' / ' + slideData.length;
+
+            // Update Buttons
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex === slideData.length - 1;
         }
 
-        // Keyboard navigation
+        // Keyboard listeners
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
-            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            }
         });
 
-        // Initial render
-        renderSlide();
+        // Run initialization
+        initDeck();
     </script>
 </body>
 </html>
