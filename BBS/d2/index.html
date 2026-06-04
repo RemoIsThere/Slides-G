@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2: Logic, I/O & Control Flow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg-deep: #020617;
+            --emerald-dark: #064e3b;
+            --emerald-base: #10b981;
+            --emerald-light: #34d399;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(52, 211, 153, 0.25);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --code-bg: #0f172a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, var(--emerald-dark), var(--bg-deep) 60%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Ambient Glow Elements */
+        .glow-sphere-1 {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-sphere-2 {
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(6, 78, 59, 0.4) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Main Glass Container */
+        #deck-container {
+            width: 90vw;
+            max-width: 1440px;
+            height: 85vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Progress Bar */
+        #progress-track {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--emerald-base), var(--emerald-light));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px var(--emerald-base);
+        }
+
+        /* Slide Viewport */
+        #viewport {
+            flex-grow: 1;
+            padding: 50px 80px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            top: 50px;
+            bottom: 50px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            visibility: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            visibility: visible;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 0%, var(--emerald-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--emerald-base);
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        p, li {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            padding-left: 10px;
+        }
+
+        li { margin-bottom: 15px; }
+
+        .highlight {
+            color: #ffffff;
+            font-weight: 500;
+            border-bottom: 2px solid var(--emerald-base);
+            padding-bottom: 2px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald-light);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-bottom: 20px;
+        }
+
+        /* Mac-Style Code Block */
+        .terminal {
+            background: var(--code-bg);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .terminal-header {
+            background: #1e293b;
+            padding: 12px 20px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #eab308; }
+        .dot-green { background: #22c55e; }
+
+        pre {
+            margin: 0;
+            padding: 25px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        /* Syntax Highlighting */
+        .cm { color: #64748b; font-style: italic; } /* Comment */
+        .kw { color: #c678dd; } /* Keyword */
+        .st { color: #34d399; } /* String */
+        .fn { color: #61afef; } /* Function */
+        .nm { color: #d19a66; } /* Number */
+        .op { color: #56b6c2; } /* Operator */
+
+        /* Navigation Footer */
+        #footer {
+            padding: 25px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--emerald-base);
+            color: var(--emerald-light);
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--emerald-base);
+            color: #020617;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .nav-btn:disabled {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.2);
+            background: transparent;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--emerald-base);
+            font-weight: 500;
+            letter-spacing: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-sphere-1"></div>
+    <div class="glow-sphere-2"></div>
+
+    <div id="deck-container">
+        <div id="progress-track"><div id="progress-fill"></div></div>
+
+        <div id="viewport">
+            </div>
+        
+        <div id="footer">
+            <button id="btn-prev" class="nav-btn" onclick="navigate(-1)">&#8592; Prev</button>
+            <div id="counter">01 / 30</div>
+            <button id="btn-next" class="nav-btn" onclick="navigate(1)">Next &#8594;</button>
+        </div>
+    </div>
+
+    <script>
+        const slideData = [
+            `
+            <span class="tag">Module 2.1</span>
+            <h1>Python & Machine Learning</h1>
+            <h2>Day 2: Logic, I/O & Control Flow</h2>
+            <p>Moving beyond static scripts: building dynamic interaction, formatting complex outputs, and designing automated decision-making logic.</p>
+            `,
+            `
+            <h2>Day 2 Objectives</h2>
+            <ul>
+                <li>Master <span class="highlight">Standard Input/Output</span> mechanisms to build interactive scripts.</li>
+                <li>Utilize advanced <strong>f-string formatting</strong> for generating dynamic logs and reports.</li>
+                <li>Implement <strong>Control Flow</strong> via semantic indentation and conditional logic (if/elif/else).</li>
+                <li>Evaluate complex scenarios using <strong>Relational & Logical Operators</strong>.</li>
+                <li>Understand the performance benefits of <strong>Short-Circuit Evaluation</strong>.</li>
+            </ul>
+            `,
+            `
+            <h2>The Need for Interaction</h2>
+            <p>A software application is inherently useless if it operates in a vacuum.</p>
+            <p>To be effective, a program must be able to:</p>
+            <ol>
+                <li>Ingest dynamic data from the outside world.</li>
+                <li>Process that data autonomously.</li>
+                <li>Communicate the results back to the user or system in a readable format.</li>
+            </ol>
+            `,
+            `
+            <h2>Standard Output: print()</h2>
+            <p>The primary mechanism for outputting data to the console is the <code>print()</code> function.</p>
+            <p>While it seems rudimentary, professional developers utilize its <span class="highlight">optional parameters</span> to control exactly how data is displayed, especially when logging model training epochs.</p>
+            `,
+            `
+            <h2>Customizing Output: 'sep'</h2>
+            <p>By default, <code>print()</code> separates multiple arguments with a standard space.</p>
+            <p>We can modify this using the <code>sep</code> (separator) parameter to format tabular data displays or construct custom log entries.</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre><span class="cm"># Utilizing the sep parameter</span>
+model <span class="op">=</span> <span class="st">"XGBoost"</span>
+status <span class="op">=</span> <span class="st">"Deployed"</span>
+
+<span class="fn">print</span>(model, status, sep<span class="op">=</span><span class="st">" | "</span>)
+<span class="cm"># Output: XGBoost | Deployed</span></pre>
+            </div>
+            `,
+            `
+            <h2>Customizing Output: 'end'</h2>
+            <p>By default, <code>print()</code> concludes every output with a hidden newline character (<code>\\n</code>).</p>
+            <p>Modifying the <code>end</code> parameter allows multiple print statements to execute on a single continuous line.</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre><span class="fn">print</span>(<span class="st">"Processing Batch 1..."</span>, end<span class="op">=</span><span class="st">" "</span>)
+<span class="fn">print</span>(<span class="st">"Success."</span>)
+<span class="cm"># Output: Processing Batch 1... Success.</span></pre>
+            </div>
+            `,
+            `
+            <h2>Standard Input: input()</h2>
+            <p>Capturing user data is managed by the <code>input()</code> function.</p>
+            <p>When Python encounters this function, it <span class="highlight">halts execution</span>, waits for the user to type a response, and resumes once the 'Return' key is pressed.</p>
+            `,
+            `
+            <h2>The Architectural Trap of input()</h2>
+            <p>A critical detail that frequently causes runtime errors in ML data pipelines:</p>
+            <p>The <code>input()</code> function <span class="highlight">always returns a string</span>, regardless of what the user types. If a user enters the number 42, Python registers it as the text string <code>"42"</code>.</p>
+            `,
+            `
+            <h2>Combining Input and Casting</h2>
+            <p>Therefore, taking in numerical data for mathematical operations requires explicit type conversion (casting).</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre><span class="cm"># Capturing input and instantly casting to float</span>
+base_salary <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Enter expected salary: "</span>))
+
+<span class="cm"># Mathematical operations are now safe</span>
+monthly_rate <span class="op">=</span> base_salary <span class="op">/</span> <span class="nm">12</span></pre>
+            </div>
+            `,
+            `
+            <h2>String Formatting Evolution</h2>
+            <p>Once data is captured and processed, it must be presented clearly.</p>
+            <p>Historically, Python utilized modulo formatting (<code>%s</code>) and the verbose <code>.format()</code> method. While still functional, modern software engineering requires a more elegant architecture.</p>
+            `,
+            `
+            <h2>Modern Python: The f-string</h2>
+            <p>Introduced in Python 3.6, the <strong>Formatted String Literal (f-string)</strong> is the industry standard.</p>
+            <p>By prefixing a string with the letter <code>f</code>, developers can embed variables and evaluate expressions directly inside curly braces <code>{}</code>.</p>
+            `,
+            `
+            <h2>Inline Evaluation</h2>
+            <p>F-strings are evaluated at runtime, making them exceptionally fast. You can even perform mathematics inside the string itself.</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>true_positives <span class="op">=</span> <span class="nm">85</span>
+false_positives <span class="op">=</span> <span class="nm">15</span>
+
+<span class="cm"># Calculating precision inline</span>
+msg <span class="op">=</span> <span class="st">f"Total records processed: {true_positives + false_positives}"</span>
+<span class="fn">print</span>(msg)</pre>
+            </div>
+            `,
+            `
+            <h2>Advanced f-string: Padding</h2>
+            <p>F-strings support complex formatting mini-languages, allowing precise control over text alignment—invaluable for generating CLI tables.</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>model_name <span class="op">=</span> <span class="st">"XGBoost"</span>
+
+<span class="cm"># &lt;20 forces left alignment with 20 spaces of padding</span>
+<span class="fn">print</span>(<span class="st">f"Model: {model_name:&lt;20} | Status: Ready"</span>)
+<span class="cm"># Output: Model: XGBoost               | Status: Ready</span></pre>
+            </div>
+            `,
+            `
+            <h2>Advanced f-string: Decimals</h2>
+            <p>When tracking ML performance metrics, you rarely want a float with 15 decimal places. F-strings allow strict float formatting.</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>accuracy <span class="op">=</span> <span class="nm">0.9456789123</span>
+
+<span class="cm"># .2f rounds to two decimal places</span>
+<span class="cm"># .2% converts to a percentage with two decimals</span>
+<span class="fn">print</span>(<span class="st">f"Accuracy: {accuracy:.2f}"</span>) <span class="cm"># 0.95</span>
+<span class="fn">print</span>(<span class="st">f"Accuracy: {accuracy:.2%}"</span>) <span class="cm"># 94.57%</span></pre>
+            </div>
+            `,
+            `
+            <span class="tag">Industry Context</span>
+            <h2>I/O in Machine Learning</h2>
+            <p>Mastery of standard I/O is heavily utilized in MLOps.</p>
+            <p>When training complex neural networks that run for 48 hours, data engineers rely on dynamically formatted print statements to stream real-time metrics (like loss and validation accuracy) to the console to ensure the model hasn't crashed.</p>
+            `,
+            `
+            <span class="tag">Module 2.2</span>
+            <h2>Control Flow & Conditional Logic</h2>
+            <p>Up to this point, our programs have executed sequentially—running in a straight line from the first line to the last.</p>
+            <p>Intelligent software must evaluate real-time data and <span class="highlight">make decisions</span>.</p>
+            `,
+            `
+            <h2>The 'if' Statement</h2>
+            <p>Control flow is the ability to branch the execution path of a program based on specific boolean conditions.</p>
+            <p>It begins with the primary <code>if</code> statement. If the condition evaluates to True, the subsequent code block runs.</p>
+            `,
+            `
+            <h2>Architecture: Semantic Indentation</h2>
+            <p>Unlike languages like Java that use curly braces <code>{}</code> to group blocks of code, Python relies entirely on <span class="highlight">whitespace</span> (typically four spaces).</p>
+            <p>This strict design choice enforces highly readable, uniform code across all professional projects.</p>
+            `,
+            `
+            <h2>The 'else' Statement</h2>
+            <p>An <code>else</code> statement acts as a default fallback mechanism.</p>
+            <p>It catches any scenarios that did not meet the preceding condition, ensuring the program knows what to do when the answer is False.</p>
+            `,
+            `
+            <h2>The 'elif' Statement</h2>
+            <p>If multiple, mutually exclusive conditions need to be evaluated in sequence, developers utilize one or more <code>elif</code> (else if) statements.</p>
+            <p>Once one condition is met, Python executes that block and <span class="highlight">skips the rest</span> of the entire control structure.</p>
+            `,
+            `
+            <h2>Control Flow in Production</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>accuracy <span class="op">=</span> <span class="nm">0.87</span>
+
+<span class="kw">if</span> accuracy <span class="op">>=</span> <span class="nm">0.90</span>:
+    <span class="fn">print</span>(<span class="st">"Deploying to production server..."</span>)
+<span class="kw">elif</span> accuracy <span class="op">>=</span> <span class="nm">0.80</span>:
+    <span class="fn">print</span>(<span class="st">"Flagging for manual review and tuning."</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="st">"Rejecting model. Triggering retraining."</span>)</pre>
+            </div>
+            `,
+            `
+            <span class="tag">Module 2.3</span>
+            <h2>Relational & Logical Operators</h2>
+            <p>The true power of decision-making lies in the complexity of the conditions themselves.</p>
+            <p>To construct intricate rules, developers rely on two fundamental categories of operators to yield a definitive True or False.</p>
+            `,
+            `
+            <h2>Relational (Comparison) Operators</h2>
+            <p>Used to compare two values (operands) against each other.</p>
+            <ul>
+                <li><code>==</code> (Equal to)</li>
+                <li><code>!=</code> (Not equal to)</li>
+                <li><code>&gt;</code> and <code>&lt;</code> (Greater / Less than)</li>
+                <li><code>&gt;=</code> and <code>&lt;=</code> (Greater / Less than or equal)</li>
+            </ul>
+            `,
+            `
+            <h2>The Dangerous Trap: = vs ==</h2>
+            <p>A common semantic error that breaks pipelines is confusing assignment with equality.</p>
+            <ul>
+                <li><code>=</code> (Single equals) <span class="highlight">assigns</span> a value to a variable in memory.</li>
+                <li><code>==</code> (Double equals) asks a <span class="highlight">question</span>: Do these two entities hold the same mathematical or textual value?</li>
+            </ul>
+            `,
+            `
+            <h2>Logical Operators</h2>
+            <p>Real-world data pipelines rarely rely on a single metric. To combine multiple relational conditions, Python employs logical operators:</p>
+            <ul>
+                <li><strong>and:</strong> Requires ALL constituent conditions to be True.</li>
+                <li><strong>or:</strong> Requires ONLY ONE condition to be True.</li>
+                <li><strong>not:</strong> Inverts the boolean value (True becomes False).</li>
+            </ul>
+            `,
+            `
+            <h2>Complex Decision Logic</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>score <span class="op">=</span> <span class="nm">85</span>
+has_phd <span class="op">=</span> <span class="kw">False</span>
+
+<span class="cm"># Applicant passes if score > 90 OR they have a PhD</span>
+<span class="kw">if</span> score <span class="op">></span> <span class="nm">90</span> <span class="kw">or</span> has_phd:
+    <span class="fn">print</span>(<span class="st">"Approved for Interview"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="st">"Application Held"</span>)</pre>
+            </div>
+            `,
+            `
+            <h2>Short-Circuit Evaluation</h2>
+            <p>A critical architectural feature of Python's logical operators.</p>
+            <p>When evaluating an <code>and</code> statement, if the first condition resolves to False, Python <span class="highlight">immediately terminates</span> the evaluation. It doesn't even read the second condition, because the overall statement can never be True.</p>
+            `,
+            `
+            <h2>Why Short-Circuiting Matters</h2>
+            <p>Professionals leverage this to optimize performance and prevent crashes.</p>
+            <p>For example: <code>if dataset_exists and analyze_dataset():</code></p>
+            <p>If the dataset doesn't exist (False), Python short-circuits and skips the analysis function entirely, saving computation time and preventing a File Not Found error.</p>
+            `,
+            `
+            <h2>Day 2 Summary</h2>
+            <ul>
+                <li><strong>I/O & Formatting:</strong> <code>input()</code> captures strings; f-strings provide dynamic, high-speed reporting for ML metrics.</li>
+                <li><strong>Control Flow:</strong> <code>if/elif/else</code> structures branch execution based on conditions, governed strictly by whitespace indentation.</li>
+                <li><strong>Logic:</strong> Combining relational (<code>==</code>, <code>></code>) and logical (<code>and</code>, <code>or</code>) operators allows for complex, short-circuit optimized decision pipelines.</li>
+            </ul>
+            `,
+            `
+            <h2>Next Steps & Lab Setup</h2>
+            <p><span class="highlight">Practical Tasks:</span></p>
+            <ol>
+                <li>Write an invoice generator that captures user input, casts it, and outputs a formatted f-string receipt.</li>
+                <li>Build a candidate screening script utilizing <code>if/elif/else</code> and complex <code>and/or</code> logic.</li>
+            </ol>
+            <p><em>Prepare for Day 3: Iteration Mechanisms (Loops) & Linear Structures (Lists).</em></p>
+            `
+        ];
+
+        let currentIndex = 0;
+        const viewport = document.getElementById('viewport');
+        const progressFill = document.getElementById('progress-fill');
+        const counter = document.getElementById('counter');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        function initDeck() {
+            slideData.forEach((htmlContent, index) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide';
+                slideDiv.id = 'slide-' + index;
+                slideDiv.innerHTML = htmlContent;
+                viewport.appendChild(slideDiv);
+            });
+            updateState();
+        }
+
+        function navigate(step) {
+            const nextIndex = currentIndex + step;
+            if (nextIndex >= 0 && nextIndex < slideData.length) {
+                currentIndex = nextIndex;
+                updateState();
+            }
+        }
+
+        function updateState() {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach((slide, index) => {
+                if (index === currentIndex) {
+                    slide.classList.add('active');
+                    slide.style.transform = 'translateX(0)';
+                } else if (index < currentIndex) {
+                    slide.classList.remove('active');
+                    slide.style.transform = 'translateX(-50px)';
+                } else {
+                    slide.classList.remove('active');
+                    slide.style.transform = 'translateX(50px)';
+                }
+            });
+
+            const percent = ((currentIndex + 1) / slideData.length) * 100;
+            progressFill.style.width = percent + '%';
+
+            const formattedCurrent = (currentIndex + 1).toString().padStart(2, '0');
+            counter.innerText = formattedCurrent + ' / ' + slideData.length;
+
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex === slideData.length - 1;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+            if (e.key === 'ArrowLeft') navigate(-1);
+        });
+
+        initDeck();
+    </script>
+</body>
+</html>
