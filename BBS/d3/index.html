@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 3: Iteration & Linear Structures</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg-deep: #020617;
+            --emerald-dark: #064e3b;
+            --emerald-base: #10b981;
+            --emerald-light: #34d399;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(52, 211, 153, 0.25);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --code-bg: #0f172a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, var(--emerald-dark), var(--bg-deep) 60%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Ambient Glow Elements */
+        .glow-sphere-1 {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-sphere-2 {
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(6, 78, 59, 0.4) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Main Glass Container */
+        #deck-container {
+            width: 90vw;
+            max-width: 1440px;
+            height: 85vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Progress Bar */
+        #progress-track {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--emerald-base), var(--emerald-light));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px var(--emerald-base);
+        }
+
+        /* Slide Viewport */
+        #viewport {
+            flex-grow: 1;
+            padding: 50px 80px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            top: 50px;
+            bottom: 50px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            visibility: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            visibility: visible;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 0%, var(--emerald-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--emerald-base);
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        p, li {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            padding-left: 10px;
+        }
+
+        li { margin-bottom: 15px; }
+
+        .highlight {
+            color: #ffffff;
+            font-weight: 500;
+            border-bottom: 2px solid var(--emerald-base);
+            padding-bottom: 2px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald-light);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-bottom: 20px;
+        }
+
+        /* Mac-Style Code Block */
+        .terminal {
+            background: var(--code-bg);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .terminal-header {
+            background: #1e293b;
+            padding: 12px 20px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #eab308; }
+        .dot-green { background: #22c55e; }
+
+        pre {
+            margin: 0;
+            padding: 25px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        /* Syntax Highlighting */
+        .cm { color: #64748b; font-style: italic; } /* Comment */
+        .kw { color: #c678dd; } /* Keyword */
+        .st { color: #34d399; } /* String */
+        .fn { color: #61afef; } /* Function */
+        .nm { color: #d19a66; } /* Number */
+        .op { color: #56b6c2; } /* Operator */
+
+        /* Navigation Footer */
+        #footer {
+            padding: 25px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--emerald-base);
+            color: var(--emerald-light);
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--emerald-base);
+            color: #020617;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .nav-btn:disabled {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.2);
+            background: transparent;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--emerald-base);
+            font-weight: 500;
+            letter-spacing: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-sphere-1"></div>
+    <div class="glow-sphere-2"></div>
+
+    <div id="deck-container">
+        <div id="progress-track"><div id="progress-fill"></div></div>
+
+        <div id="viewport">
+            </div>
+        
+        <div id="footer">
+            <button id="btn-prev" class="nav-btn" onclick="navigate(-1)">&#8592; Prev</button>
+            <div id="counter">01 / 30</div>
+            <button id="btn-next" class="nav-btn" onclick="navigate(1)">Next &#8594;</button>
+        </div>
+    </div>
+
+    <script>
+        const slideData = [
+            `
+            <span class="tag">Module 3.1</span>
+            <h1>Python & Machine Learning</h1>
+            <h2>Day 3: Iteration & Linear Structures</h2>
+            <p>Automating repetitive tasks through loops and organizing related data into mutable, index-based arrays.</p>
+            `,
+            `
+            <h2>Day 3 Objectives</h2>
+            <ul>
+                <li>Understand the <strong>DRY Principle</strong> (Don't Repeat Yourself).</li>
+                <li>Master definite iteration via the <span class="highlight">for loop</span> and <code>range()</code> function.</li>
+                <li>Implement indefinite iteration via the <span class="highlight">while loop</span>.</li>
+                <li>Control execution pathways using <code>break</code> and <code>continue</code>.</li>
+                <li>Build and manipulate linear data structures (Lists).</li>
+            </ul>
+            `,
+            `
+            <h2>The DRY Principle</h2>
+            <p>A fundamental principle of professional software engineering is <strong>DRY: Don't Repeat Yourself</strong>.</p>
+            <p>If an algorithm requires a specific block of code to be executed one hundred times, writing that block out one hundred times is highly inefficient and prone to typographical errors.</p>
+            `,
+            `
+            <h2>Introduction to Iteration</h2>
+            <p>To automate repetitive tasks dynamically, Python relies on <span class="highlight">iteration mechanisms</span>.</p>
+            <p>These control structures allow a program to execute a suite of instructions repeatedly until a specific condition is met or a sequence is fully traversed.</p>
+            `,
+            `
+            <h2>Definite Iteration: 'for' Loops</h2>
+            <p>The <code>for</code> loop in Python is designed for <strong>definite iteration</strong>.</p>
+            <p>Unlike traditional C-style loops that rely on numerical counters, Python's <code>for</code> loop is fundamentally a "for-each" loop. It iterates directly over the items of any sequence or iterable object.</p>
+            `,
+            `
+            <h2>The range() Function</h2>
+            <p>When a developer needs a loop to run a specific number of times, they utilize Python's built-in <code>range()</code> function.</p>
+            <p>It generates a sequence of numbers on the fly, making it highly memory-efficient. The syntax is <code>range(start, stop, step)</code>, where the stop value is strictly <span class="highlight">exclusive</span>.</p>
+            `,
+            `
+            <h2>Executing a 'for' Loop</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre><span class="cm"># Iterating 5 times (1 through 5)</span>
+<span class="kw">for</span> batch_num <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">1</span>, <span class="nm">6</span>):
+    <span class="fn">print</span>(<span class="st">f"Processing Batch {batch_num}..."</span>)
+
+<span class="cm"># Iterating with a step (Even numbers 0 to 8)</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">0</span>, <span class="nm">10</span>, <span class="nm">2</span>):
+    <span class="fn">print</span>(i)</pre>
+            </div>
+            `,
+            `
+            <h2>Indefinite Iteration: 'while' Loops</h2>
+            <p>The <code>while</code> loop is used for <strong>indefinite iteration</strong>.</p>
+            <p>It executes a block of code repeatedly as long as a specified boolean condition evaluates to <code>True</code>. The exact number of iterations does not need to be known in advance.</p>
+            `,
+            `
+            <h2>Event-Driven Architecture</h2>
+            <p>Because while loops are indefinite, they are perfect for event-driven programming.</p>
+            <p>Engineers use them to continuously listen for user input or to wait for a network resource (like an API or database) to become available.</p>
+            `,
+            `
+            <h2>The Danger of Infinite Loops</h2>
+            <p>This flexibility introduces a severe risk.</p>
+            <p>If the condition governing the while loop never evaluates to <code>False</code> (e.g., if a counter variable is never incremented inside the loop block), the program will run indefinitely until the system crashes from memory exhaustion.</p>
+            `,
+            `
+            <h2>Loop Control: 'break'</h2>
+            <p>To exercise fine-grained control over loops, Python provides control statements.</p>
+            <p>The <code>break</code> statement <span class="highlight">immediately terminates</span> the loop entirely, bypassing any remaining iterations. It is the emergency exit.</p>
+            `,
+            `
+            <h2>Loop Control: 'continue'</h2>
+            <p>The <code>continue</code> statement halts the <strong>current</strong> iteration only.</p>
+            <p>It immediately jumps back to the top of the loop to evaluate the next item or condition, skipping any code below it for that specific cycle.</p>
+            `,
+            `
+            <h2>Loop Control: 'pass'</h2>
+            <p>Finally, <code>pass</code> is a null operation.</p>
+            <p>It serves as a structural placeholder when a statement is syntactically required by Python's indentation rules, but no executable code is ready to be implemented yet.</p>
+            `,
+            `
+            <h2>Industry Context: Retries & Epochs</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>attempts <span class="op">=</span> <span class="nm">0</span>
+connected <span class="op">=</span> <span class="kw">False</span>
+
+<span class="cm"># API Connection Retry Protocol</span>
+<span class="kw">while not</span> connected <span class="kw">and</span> attempts <span class="op"><</span> <span class="nm">3</span>:
+    attempts <span class="op">+=</span> <span class="nm">1</span>
+    <span class="cm"># Simulate connection check</span>
+    <span class="kw">if</span> check_network():
+        connected <span class="op">=</span> <span class="kw">True</span>
+        <span class="kw">break</span> <span class="cm"># Exit early on success</span></pre>
+            </div>
+            `,
+            `
+            <span class="tag">Module 3.2</span>
+            <h2>Introduction to Data Structures</h2>
+            <p>Primitive data types hold a single piece of information. However, professional software rarely processes data in isolation.</p>
+            <p>Developers require structured containers to group related data together. The most fundamental container in Python is the <span class="highlight">List</span>.</p>
+            `,
+            `
+            <h2>The Python List</h2>
+            <p>A list is a linear, ordered data structure.</p>
+            <p>It is defined by enclosing comma-separated values within square brackets <code>[]</code>. Because they are ordered, every element is assigned a specific position.</p>
+            `,
+            `
+            <h2>List Initialization</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre><span class="cm"># Initializing an empty list</span>
+sensor_data <span class="op">=</span> []
+
+<span class="cm"># Initializing a populated list</span>
+active_users <span class="op">=</span> [<span class="st">"admin_01"</span>, <span class="st">"dev_ops"</span>, <span class="st">"data_eng"</span>]</pre>
+            </div>
+            `,
+            `
+            <h2>Homogeneous vs. Heterogeneous</h2>
+            <p>Because Python is dynamically typed, a list can technically hold a heterogeneous mixture of data (integers, strings, and other lists simultaneously).</p>
+            <p>However, standard engineering practice dictates using lists to store <span class="highlight">homogeneous data</span> (all the same type) to ensure predictable behavior during iteration.</p>
+            `,
+            `
+            <h2>The Concept of Mutability</h2>
+            <p>The defining characteristic of a list is its <strong>mutability</strong>.</p>
+            <p>A mutable object is one whose internal state can be changed after it is created in memory. Elements within a list can be modified, added, or removed dynamically.</p>
+            `,
+            `
+            <h2>Modifying Lists In-Place</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>users <span class="op">=</span> [<span class="st">"alice"</span>, <span class="st">"bob"</span>]
+
+<span class="cm"># .append() adds to the absolute end</span>
+users.append(<span class="st">"charlie"</span>)
+
+<span class="cm"># .insert() places an item at a specific index</span>
+users.insert(<span class="nm">0</span>, <span class="st">"admin_root"</span>)</pre>
+            </div>
+            `,
+            `
+            <h2>Removing Elements</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>users <span class="op">=</span> [<span class="st">"alice"</span>, <span class="st">"bob"</span>, <span class="st">"charlie"</span>]
+
+<span class="cm"># .remove() deletes the first matching value</span>
+users.remove(<span class="st">"bob"</span>)
+
+<span class="cm"># .pop() removes AND returns the last item</span>
+last_user <span class="op">=</span> users.pop()</pre>
+            </div>
+            `,
+            `
+            <h2>Zero-Based Indexing</h2>
+            <p>Python utilizes zero-based indexing to access data within a list.</p>
+            <p>This means the very first element is physically located at index <code>0</code>, the second at index <code>1</code>, and so forth.</p>
+            `,
+            `
+            <h2>Negative Indexing</h2>
+            <p>A powerful architectural feature of Python is native support for negative indexing.</p>
+            <p>Index <code>-1</code> always represents the last element in the list, <code>-2</code> the second to last, allowing rapid access without calculating the total length.</p>
+            `,
+            `
+            <h2>List Slicing</h2>
+            <p>Developers can extract continuous subsets of a list using a technique called "slicing."</p>
+            <p>It utilizes a strict <span class="highlight">[start : stop : step]</span> syntax inside the brackets. Crucially, the <code>stop</code> index is exclusive.</p>
+            `,
+            `
+            <h2>Indexing and Slicing in Action</h2>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>data <span class="op">=</span> [<span class="nm">10</span>, <span class="nm">20</span>, <span class="nm">30</span>, <span class="nm">40</span>, <span class="nm">50</span>]
+
+<span class="cm"># Accessing individual elements</span>
+first <span class="op">=</span> data[<span class="nm">0</span>]   <span class="cm"># 10</span>
+last <span class="op">=</span> data[<span class="op">-</span><span class="nm">1</span>]   <span class="cm"># 50</span>
+
+<span class="cm"># Slicing: Get items from index 1 up to (but not including) 4</span>
+subset <span class="op">=</span> data[<span class="nm">1</span>:<span class="nm">4</span>]  <span class="cm"># [20, 30, 40]</span></pre>
+            </div>
+            `,
+            `
+            <h2>Iterating Through Lists</h2>
+            <p>Lists and <code>for</code> loops are designed to work seamlessly together.</p>
+            <div class="terminal">
+                <div class="terminal-header"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <pre>servers <span class="op">=</span> [<span class="st">"Alpha"</span>, <span class="st">"Beta"</span>, <span class="st">"Gamma"</span>]
+
+<span class="cm"># Directly iterating over the elements</span>
+<span class="kw">for</span> srv <span class="kw">in</span> servers:
+    <span class="fn">print</span>(<span class="st">f"Pinging {srv} server..."</span>)</pre>
+            </div>
+            `,
+            `
+            <h2>Hardware Limitations of Lists</h2>
+            <p>While lists are the backbone of general data management (like parsing JSON payloads), they possess strict hardware limitations.</p>
+            <p>Under the hood, Python lists are implemented as dynamic arrays of pointers.</p>
+            `,
+            `
+            <h2>Memory Overhead in ML</h2>
+            <p>Because they store memory addresses rather than contiguous blocks of data, standard lists introduce massive memory overhead.</p>
+            <p>When data scientists process millions of numerical records, they must eventually convert standard lists into <span class="highlight">NumPy arrays</span> to prevent bottlenecks.</p>
+            `,
+            `
+            <h2>Day 3 Summary</h2>
+            <ul>
+                <li><strong>Iteration:</strong> Use <code>for</code> loops for known sequences and <code>while</code> loops for indefinite conditions.</li>
+                <li><strong>Control:</strong> Manage flow explicitly using <code>break</code> and <code>continue</code>.</li>
+                <li><strong>Data Structures:</strong> Lists are ordered, zero-indexed, and highly mutable containers.</li>
+                <li><strong>Extraction:</strong> Slicing allows for rapid, memory-efficient data subset extraction.</li>
+            </ul>
+            `,
+            `
+            <h2>Next Steps & Lab Setup</h2>
+            <p><span class="highlight">Practical Tasks:</span></p>
+            <ol>
+                <li>Write a <code>while</code> loop that creates a simple guessing game. Use <code>break</code> on success.</li>
+                <li>Initialize a list of 10 numbers. Use slicing and the <code>step</code> parameter to extract only the even indices.</li>
+            </ol>
+            <p><em>Prepare for Day 4: Immutable Data Structures (Tuples) & Associative Maps (Dictionaries).</em></p>
+            `
+        ];
+
+        let currentIndex = 0;
+        const viewport = document.getElementById('viewport');
+        const progressFill = document.getElementById('progress-fill');
+        const counter = document.getElementById('counter');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        function initDeck() {
+            slideData.forEach((htmlContent, index) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide';
+                slideDiv.id = 'slide-' + index;
+                slideDiv.innerHTML = htmlContent;
+                viewport.appendChild(slideDiv);
+            });
+            updateState();
+        }
+
+        function navigate(step) {
+            const nextIndex = currentIndex + step;
+            if (nextIndex >= 0 && nextIndex < slideData.length) {
+                currentIndex = nextIndex;
+                updateState();
+            }
+        }
+
+        function updateState() {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach((slide, index) => {
+                if (index === currentIndex) {
+                    slide.classList.add('active');
+                    slide.style.transform = 'translateX(0)';
+                } else if (index < currentIndex) {
+                    slide.classList.remove('active');
+                    slide.style.transform = 'translateX(-50px)';
+                } else {
+                    slide.classList.remove('active');
+                    slide.style.transform = 'translateX(50px)';
+                }
+            });
+
+            const percent = ((currentIndex + 1) / slideData.length) * 100;
+            progressFill.style.width = percent + '%';
+
+            const formattedCurrent = (currentIndex + 1).toString().padStart(2, '0');
+            counter.innerText = formattedCurrent + ' / ' + slideData.length;
+
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex === slideData.length - 1;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+            if (e.key === 'ArrowLeft') navigate(-1);
+        });
+
+        initDeck();
+    </script>
+</body>
+</html>
